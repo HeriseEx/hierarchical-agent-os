@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="分层智能体操作系统：一部关于分层认知、事件驱动编排与长期任务的交互动画。单文件，离线可用。">
+<title>Hierarchical Agent OS · 分层智能体操作系统</title>
+<style>
+:root{--bg:#080e13;--panel:#0d1820;--line:#23343e;--ink:#edf3f2;--muted:#92a7b0;--green:#a6f1cb;--cyan:#67d4e6;--amber:#f4b96f;--red:#ff897c;--violet:#b8b4f4;--mono:"Cascadia Code","SFMono-Regular",Consolas,monospace;--sans:"Segoe UI","Microsoft YaHei UI","PingFang SC",sans-serif}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}body{overflow-x:hidden}button,input{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:5px}button{touch-action:manipulation}::selection{background:#285c59;color:var(--ink)}
+.shell{width:min(1600px,100%);margin:0 auto;padding:0 42px}.masthead{height:86px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:20px}.identity{display:flex;align-items:center;gap:15px}.logo{width:35px;height:38px;color:var(--green)}.wordmark{font-size:16px;font-weight:600;letter-spacing:.16em}.wordmark span{font-weight:400;color:var(--muted)}.mast-meta{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:27px}.film-badge{border:1px solid #354750;padding:7px 11px;border-radius:3px;color:var(--green)}
+.stage{position:relative;min-height:610px;height:clamp(610px,calc(100vh - 273px),850px);isolation:isolate;overflow:hidden}.stage:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 73% 48%,#163a352c,transparent 57%);z-index:-1}.stage:after{content:"";position:absolute;inset:0;background-image:linear-gradient(#59758609 1px,transparent 1px),linear-gradient(90deg,#59758609 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(90deg,transparent 30%,#000);z-index:-1}#ambient{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.6}.scene-top{position:absolute;top:29px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.11em}.scene-index{color:var(--green)}.scene-top .slashes{margin:0 14px;color:#3d545f}.scene-top-right{display:flex;gap:18px;align-items:center}.signal{width:6px;height:6px;background:var(--green);display:inline-block;border-radius:50%;box-shadow:0 0 13px #a6f1cb77}.stage-body{height:100%;padding:90px 0 38px;display:grid;grid-template-columns:34% 66%;align-items:center}.narrative{padding-right:38px;position:relative;z-index:3;align-self:center}.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--green);margin:0 0 24px;display:flex;align-items:center;gap:10px}.eyebrow:before{content:"";width:24px;height:1px;background:currentColor}.narrative h1{font-size:clamp(35px,3.6vw,57px);font-weight:500;line-height:1.29;letter-spacing:-.03em;margin:0 0 23px;white-space:pre-line;text-wrap:balance}.narrative h1 em{font-style:normal;color:var(--green)}.description{font-size:16px;line-height:1.85;color:#b2c3c9;max-width:400px;margin:0 0 32px;text-wrap:pretty}.facts{display:grid;gap:16px;max-width:400px}.fact{display:grid;grid-template-columns:28px 1fr;gap:11px;align-items:start}.fact-num{font-family:var(--mono);font-size:12px;color:#739188;padding-top:4px}.fact-title{font-size:15px;line-height:1.65;color:#e0e9e7}.fact-sub{font-size:12px;line-height:1.65;color:var(--muted);margin-top:2px}.narrative-foot{margin-top:32px;display:flex;gap:16px;align-items:center;font-size:12px;line-height:1.6;color:var(--muted)}.narrative-foot:before{content:"";width:29px;height:29px;background:linear-gradient(90deg,var(--green) 1px,transparent 1px),linear-gradient(var(--green) 1px,transparent 1px);background-size:7px 7px;opacity:.32;flex-shrink:0}
+.visual{position:relative;width:100%;height:100%;min-width:0;display:grid;align-items:center;overflow:visible}.visual-top{position:absolute;left:20px;right:6px;top:-6px;display:flex;align-items:center;justify-content:space-between;gap:20px;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.05em}.visual-top b{color:var(--ink);font-weight:400}.layer{grid-area:1/1;position:relative;visibility:hidden;opacity:0;pointer-events:none;min-width:0}.layer.is-visible{visibility:visible;pointer-events:auto}.graph{height:100%;max-height:650px;display:flex;flex-direction:column;justify-content:center}.graph-camera{position:relative;aspect-ratio:900/570;width:100%;transform-origin:50% 45%;will-change:transform}.graph-wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.wire{fill:none;stroke:#45616d;stroke-width:1.2;opacity:.43}.wire.glow{stroke:var(--green);opacity:.65;stroke-width:1.5}.wire.uncertain{stroke:var(--amber)}.path-packet circle{filter:url(#soft-glow)}.path-packet text{font-family:var(--mono);font-size:11px;letter-spacing:.03em}.node{position:absolute;border:1px solid #30454d;border-radius:7px;background:linear-gradient(115deg,#12232bea,#0b151eea);box-shadow:0 7px 25px #0004;transform:translate(-50%,-50%);will-change:opacity,transform;overflow:hidden}.node-top{display:flex;justify-content:space-between;align-items:center;gap:5px;color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.055em}.tier{font-size:11px;color:var(--green);background:#a6f1cb12;padding:2px 5px;border-radius:2px}.node-title{font-size:clamp(13px,1.15vw,18px);font-weight:500;letter-spacing:-.01em;margin-top:8px;white-space:nowrap}.node-sub{font-size:11px;color:var(--muted);margin-top:5px;white-space:nowrap}.node.l0{width:32%;height:17%;border-color:#749981;padding:13px 17px;background:linear-gradient(115deg,#213c36e8,#122328f2);box-shadow:0 0 50px #a6f1cb09,0 7px 25px #0004}.node.l0 .node-title{color:var(--green);font-size:clamp(14px,1.4vw,22px);margin-top:8px}.node.l1{width:34%;height:17%;padding:12px 17px;border-color:#506e77}.node.l2{width:24%;height:14%;padding:10px 13px}.node.l2 .node-title{margin-top:5px}.node.worker{width:8.7%;height:10%;padding:8px 7px;background:#101d25;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;border-color:#30434c}.worker-name{font-family:var(--mono);font-size:12px}.worker-state{font-family:var(--mono);font-size:9px;color:var(--muted)}.worker[data-status="DONE"]{border-color:#76b794}.worker[data-status="DONE"] .worker-state{color:var(--green)}.worker[data-status="FAILED"]{border-color:var(--red);background:#3c211f}.worker[data-status="FAILED"] .worker-state{color:var(--red)}.worker[data-status="BLOCKED"]{border-color:var(--amber);background:#322921}.worker[data-status="BLOCKED"] .worker-state{color:var(--amber)}.worker[data-status="ESCALATE"]{border-color:var(--violet)}.worker[data-status="ESCALATE"] .worker-state{color:var(--violet)}.life-line{position:absolute;left:5px;width:20px;height:1px;background:var(--line)}.tier-label{position:absolute;left:2px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:#6e8d98}.graph-hud{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #253b424d;padding:16px 10px 0;min-height:55px;font-size:11px;font-family:var(--mono);color:var(--muted)}.graph-hud b{font-weight:400;color:var(--green)}.legend{display:flex;gap:16px;align-items:center}.legend-item{display:flex;align-items:center;gap:6px}.legend-line{width:17px;height:2px;background:var(--cyan)}.legend-line.up{background:var(--green)}.legend-line.issue{background:var(--amber)}.status-pill{font-family:var(--mono);font-size:10px;color:var(--green);padding:4px 6px;border-radius:3px;background:#a6f1cb10}.status-pill.issue{color:var(--amber);background:#f4b96f10}.graph-toast{position:absolute;left:67%;top:22%;max-width:29%;border-left:2px solid var(--green);background:#0e1c23ed;padding:9px 11px;color:var(--green);font-family:var(--mono);font-size:10px;line-height:1.75;box-shadow:0 6px 25px #0003;opacity:0}.graph-toast small{display:block;color:var(--muted);font:11px var(--sans)}.flow-banner{position:absolute;top:4%;left:6%;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--cyan);opacity:0}.flow-banner span{display:block;color:var(--muted);font-family:var(--sans);font-size:12px}.event-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:15px 10px 0;min-height:39px;opacity:0}.event-chip{border:1px solid var(--line);padding:8px 8px;font-family:var(--mono);font-size:10px;display:flex;justify-content:space-between;gap:4px;background:#0e1921}.event-chip span{color:var(--muted)}.event-chip[data-event="DONE"]{color:var(--green)}.event-chip[data-event="FAILED"]{color:var(--red)}.event-chip[data-event="BLOCKED"]{color:var(--amber)}.event-chip[data-event="ESCALATE"]{color:var(--violet)}
+.machine{padding:30px 12px 0 20px}.panel-label{font:11px var(--mono);letter-spacing:.12em;color:var(--muted);margin-bottom:19px}.panel-label span{color:var(--green)}.runtime-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:0 0 18px;margin-bottom:20px;gap:12px}.runtime-head h2{font-size:clamp(20px,2vw,29px);font-weight:500;margin:0}.runtime-head small{font-family:var(--mono);color:var(--amber);font-size:11px}.machine-track{position:relative;aspect-ratio:820/268}.machine-track svg{position:absolute;width:100%;height:100%;overflow:visible}.state{position:absolute;width:23%;height:30%;transform:translate(-50%,-50%);border:1px solid #30434c;border-radius:5px;background:#101b23;padding:11px;display:flex;flex-direction:column;justify-content:center;gap:7px;color:var(--muted)}.state-name{font:12px var(--mono);letter-spacing:.05em}.state-zh{font-size:12px}.state.active{border-color:var(--green);color:var(--green);background:#19332d;box-shadow:0 0 25px #a6f1cb0d}.state.error.active{border-color:var(--red);color:var(--red);background:#322321}.state.pass{border-color:#486457;color:#a9c7b4}.loop-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:10px var(--mono);color:var(--amber);white-space:nowrap}.runtime-detail{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:17px}.runtime-card{background:#101d25;border:1px solid var(--line);border-radius:6px;padding:16px 16px 14px;min-height:98px}.runtime-card .role{font:11px var(--mono);color:var(--green);letter-spacing:.07em}.runtime-card h3{font-size:15px;font-weight:400;margin:9px 0 6px}.runtime-card p{font-size:12px;color:var(--muted);margin:0;line-height:1.7}.guard-row{display:flex;gap:16px;padding:18px 0;font:11px var(--mono);color:var(--muted)}.guard-row b{color:var(--ink);font-weight:400}.machine-log{font:11px var(--mono);line-height:1.85;border-left:2px solid var(--green);padding:5px 13px;background:#0c191c;color:#b4c7ca;min-height:63px}.machine-log strong{color:var(--green);font-weight:400}.machine-foot{font-size:12px;line-height:1.7;color:var(--muted);margin-top:14px}
+.memory{padding:26px 12px 0 20px}.memory-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.memory-box{position:relative;padding:18px;border:1px solid var(--line);border-radius:7px;background:#101c24}.memory-box h2{font-size:19px;font-weight:500;margin:0 0 5px}.memory-box .overline{font:10px var(--mono);letter-spacing:.11em;color:var(--green);margin-bottom:9px}.memory-box .support{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:18px}.artifact{border-top:1px solid #293d455e;padding:9px 0;display:flex;justify-content:space-between;align-items:center;gap:7px;font-size:12px}.artifact .hash{font:10px var(--mono);color:var(--muted)}.artifact:last-of-type{padding-bottom:0}.ctx-part{position:relative;padding:11px;border-radius:4px;background:#153b335c;margin-bottom:8px}.ctx-part.delta{background:#54412d4d}.ctx-part .part-head{display:flex;justify-content:space-between;gap:8px;font:10px var(--mono);color:var(--green);margin-bottom:7px}.ctx-part.delta .part-head{color:var(--amber)}.ctx-part p{font-size:12px;line-height:1.5;color:#c1d0d2;margin:0}.ctx-part .fill{height:4px;margin-top:11px;background:#a6f1cb44;border-radius:2px;width:100%;transform-origin:left}.ctx-part.delta .fill{background:#f4b96f66}.memory-bridge{display:flex;justify-content:center;align-items:center;gap:12px;height:51px;font:11px var(--mono);color:var(--cyan)}.memory-bridge .bridge-line{width:70px;height:1px;background:linear-gradient(90deg,#67d4e610,var(--cyan));position:relative}.bridge-line:after{content:"";width:4px;height:4px;position:absolute;right:0;top:-1.5px;background:var(--cyan);border-radius:50%}.cost-panel{padding:16px 19px;border:1px solid var(--line);border-radius:7px;background:#101c24}.cost-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}.cost-head h3{font-weight:400;font-size:15px;margin:0}.cost-head span{font-size:10px;line-height:1.5;color:var(--muted)}.cost-row{display:grid;grid-template-columns:104px 1fr 57px;gap:11px;align-items:center;margin:13px 0;font-size:12px}.bar-track{height:11px;background:#27343e80;border-radius:2px;overflow:hidden}.bar{height:100%;background:#566b7a;transform-origin:left}.bar.optimized{background:var(--green)}.cost-number{font:13px var(--mono);text-align:right}.cost-formula{border-top:1px solid var(--line);padding-top:13px;margin-top:15px;font:10px var(--mono);color:var(--muted)}.cost-formula b{color:var(--green);font-weight:400}.memory-note{margin-top:15px;font-size:11px;color:var(--muted);line-height:1.8}.memory-note b{font-weight:400;color:#c2d1d6}.rebuild-badge{display:inline-flex;align-items:center;gap:6px;color:var(--green);font:10px var(--mono);margin-top:11px}
+.caption{height:54px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:17px;color:#c7d5d7;font-size:15px;line-height:1.65;text-align:center;padding:4px 16px}.caption-label{font:10px var(--mono);color:var(--green);letter-spacing:.1em;flex-shrink:0}.chapters{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;padding:17px 0 15px}.chapter{background:none;border:0;border-top:2px solid #2b3b44;padding:10px 0 0;text-align:left;position:relative;color:var(--muted);font-size:12px;line-height:1.6;white-space:nowrap}.chapter:before{position:absolute;content:"";top:-2px;left:0;height:2px;background:var(--green);width:var(--progress,0%)}.chapter .ch-num{font:10px var(--mono);margin-right:9px;color:#68858b}.chapter.active{color:var(--ink)}.chapter.active .ch-num{color:var(--green)}.chapter:hover{color:var(--green)}
+.transport{display:flex;justify-content:space-between;gap:24px;align-items:center;height:69px;border-top:1px solid var(--line)}.controls{display:flex;align-items:center;gap:10px}.play-button{width:101px;height:38px;border:1px solid #74978a;border-radius:4px;background:var(--green);color:#14251e;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600}.play-button svg{width:14px;height:14px}.icon-button{background:none;border:1px solid #2c3f48;border-radius:4px;width:38px;height:38px;display:grid;place-items:center}.icon-button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}.icon-button:hover{background:#14252c;border-color:#54727a}.icon-button[aria-pressed="true"]{color:var(--green);border-color:#638a76;background:#163029}.speed-button{border:1px solid #2c3f48;background:none;border-radius:4px;height:38px;min-width:54px;font:12px var(--mono)}.timecode{font:12px var(--mono);color:var(--muted);min-width:101px;white-space:nowrap}.timecode strong{color:var(--ink);font-weight:400}.scrub{position:relative;flex:1;max-width:540px;display:flex;align-items:center;gap:18px}.seek{width:100%;appearance:none;-webkit-appearance:none;height:3px;background:linear-gradient(90deg,var(--green) var(--seek,0%),#2a3c43 var(--seek,0%));border-radius:2px;cursor:pointer;margin:0;touch-action:none}.seek::-webkit-slider-thumb{appearance:none;width:10px;height:10px;background:var(--green);border:2px solid #0e191e;border-radius:50%;box-shadow:0 0 0 1px #95c4af}.seek::-moz-range-thumb{width:9px;height:9px;background:var(--green);border:1px solid #14251e;border-radius:50%}.transport-right{display:flex;align-items:center;gap:9px}.key-hint{font:10px var(--mono);color:#718c97;margin-right:8px}.footer-note{height:29px;display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:10px;color:#708893;font-family:var(--mono);letter-spacing:.04em}.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);padding:12px 20px;border:1px solid #47626b;border-radius:5px;background:#12232ced;font-size:13px;color:var(--ink);opacity:0;pointer-events:none;z-index:30;transition:opacity .2s}.toast.visible{opacity:1}.noscript{padding:30px;text-align:center;color:var(--amber)}
+.shell:fullscreen{width:100vw;height:100vh;padding:0 50px;background:var(--bg);display:flex;flex-direction:column}.shell:fullscreen .masthead{height:72px;flex-shrink:0}.shell:fullscreen .stage{height:auto;min-height:0;flex:1}.shell:fullscreen .stage-body{padding-top:80px;padding-bottom:20px}.shell:fullscreen .caption,.shell:fullscreen .chapters,.shell:fullscreen .transport,.shell:fullscreen .footer-note{flex-shrink:0}.shell:fullscreen .chapters{padding-top:11px;padding-bottom:10px}.shell:fullscreen .transport{height:57px}.shell.theater .masthead{visibility:hidden}.shell.theater .scene-top-right,.shell.theater .footer-note{visibility:hidden}.shell.theater .transport,.shell.theater .chapters{opacity:0;transition:opacity .3s}.shell.theater:hover .transport,.shell.theater:hover .chapters,.shell.theater:focus-within .transport,.shell.theater:focus-within .chapters{opacity:1}
+@media(min-width:1550px){.stage-body{grid-template-columns:33% 67%}.description{font-size:18px}.fact-title{font-size:16px}.fact-sub{font-size:13px}.graph-camera{max-height:625px}.node-sub{font-size:12px}.machine .state-name{font-size:14px}.artifact,.ctx-part p{font-size:14px}.memory-box .support{font-size:13px}.worker-name{font-size:14px}.worker-state{font-size:10px}}
+@media(max-width:1100px){.shell{padding:0 25px}.masthead{height:72px}.mast-meta{gap:13px}.mast-meta .meta-copy{display:none}.stage{min-height:600px;height:calc(100vh - 273px)}.stage-body{grid-template-columns:35% 65%;padding-top:82px}.narrative{padding-right:20px}.narrative h1{font-size:38px}.description{font-size:14px;margin-bottom:25px}.facts{gap:12px}.fact-title{font-size:13px}.fact-sub{font-size:11px}.narrative-foot{font-size:11px;margin-top:24px}.node.l0,.node.l1{padding:9px 11px}.node.l2{padding:8px}.node-top{font-size:8px}.node-sub{font-size:9px;margin-top:4px}.node-title{font-size:13px;margin-top:6px}.node.l0 .node-title{font-size:15px;margin-top:6px}.tier{font-size:9px}.worker-name{font-size:10px}.worker-state{font-size:8px}.graph-toast{font-size:9px}.graph-hud,.legend{gap:9px;font-size:9px}.event-chip{font-size:9px;padding:7px 4px}.machine,.memory{padding-left:10px;padding-right:0}.runtime-card{padding:12px}.runtime-card h3{font-size:13px}.runtime-card p{font-size:11px}.guard-row{gap:10px;font-size:10px}.state{padding:8px}.state-name{font-size:10px}.state-zh{font-size:11px}.memory-box{padding:13px}.memory-layout{gap:10px}.memory-box h2{font-size:17px}.memory-box .support{font-size:11px}.artifact{font-size:11px}.artifact .hash{font-size:9px}.ctx-part{padding:9px}.ctx-part .part-head{font-size:9px}.ctx-part p{font-size:11px}.cost-head span{font-size:9px}.key-hint{display:none}.caption{font-size:13px}.visual-top{font-size:9px}.chapters{gap:10px}.chapter{font-size:11px}.ch-num{margin-right:5px!important}}
+@media(max-width:760px){.shell{padding:0 18px}.masthead{height:65px}.wordmark{font-size:12px;letter-spacing:.1em}.logo{width:28px}.mast-meta{font-size:9px}.film-badge{padding:6px}.stage{height:auto;min-height:0}.scene-top{top:22px;font-size:10px}.scene-top-right{display:none}.stage-body{display:flex;flex-direction:column;align-items:stretch;gap:25px;padding:65px 0 25px}.narrative{padding-right:0}.eyebrow{margin-bottom:14px;font-size:10px}.narrative h1{font-size:clamp(32px,7vw,44px);white-space:normal;margin-bottom:14px}.description{font-size:14px;max-width:100%;margin-bottom:17px}.facts{display:grid;grid-template-columns:1fr 1fr;max-width:100%;gap:11px}.fact{grid-template-columns:19px 1fr;gap:4px}.fact:last-child{grid-column:1/-1}.fact-title{font-size:12px}.fact-sub{font-size:10px}.narrative-foot{display:none}.visual{height:440px}.visual-top{top:-6px;left:0;font-size:9px}.graph-camera{aspect-ratio:900/640}.node.l0,.node.l1{height:19%;width:39%;padding:8px}.node.l2{height:15%;width:28%;padding:6px}.node-title{font-size:11px}.node.l0 .node-title{font-size:12px}.node-sub{font-size:8px}.node-top{font-size:7px}.node.l1 .node-title{font-size:10px}.node.worker{height:11%;width:9%;padding:3px}.worker-name{font-size:9px}.worker-state{font-size:7px}.tier-label{font-size:8px}.graph-toast{padding:5px 6px;font-size:7px;max-width:26%;left:72%}.graph-toast small{font-size:8px}.graph-hud{font-size:8px;padding-top:10px;min-height:36px;flex-wrap:wrap}.event-strip{margin-top:9px;gap:4px}.event-chip{font-size:8px}.flow-banner{font-size:8px;top:4%;left:0}.flow-banner span{font-size:9px}.caption{height:auto;min-height:62px;font-size:12px;gap:8px;padding:10px 0}.caption-label{font-size:8px}.chapters{grid-template-columns:repeat(3,1fr);padding-top:15px;gap:10px 14px}.chapter{font-size:11px;padding-top:7px}.transport{gap:10px;flex-wrap:wrap;height:auto;padding:13px 0;position:relative}.scrub{order:3;max-width:none;flex-basis:100%;margin:10px 0 5px}.controls{gap:6px}.play-button{width:79px;height:34px;font-size:12px}.icon-button{width:33px;height:34px}.speed-button{min-width:43px;height:34px;font-size:11px}.timecode{font-size:10px;min-width:86px}.transport-right{gap:6px}.footer-note{height:41px;font-size:8px;line-height:1.6}.footer-note span:first-child{max-width:68%}.machine,.memory{padding:18px 0 0}.runtime-head{margin-bottom:10px;padding-bottom:12px}.runtime-head h2{font-size:21px}.runtime-head small{font-size:9px}.panel-label{font-size:9px;margin-bottom:12px}.state-name{font-size:9px}.state-zh{font-size:10px}.state{padding:7px;gap:4px}.runtime-card{min-height:80px;padding:10px}.runtime-card .role{font-size:9px}.runtime-card h3{font-size:12px}.runtime-card p{font-size:10px}.guard-row{font-size:9px;gap:10px;padding:11px 0}.machine-log{font-size:9px;min-height:50px}.machine-foot{font-size:10px;margin-top:9px}.memory-box{padding:10px}.memory-box h2{font-size:16px}.memory-box .support{font-size:10px;margin-bottom:11px}.artifact{font-size:10px;padding:8px 0}.artifact .hash{font-size:8px}.ctx-part .part-head{font-size:8px}.ctx-part p{font-size:10px}.ctx-part{padding:8px;margin-bottom:6px}.memory-bridge{height:37px;font-size:9px;gap:7px}.memory-bridge .bridge-line{width:26px}.cost-panel{padding:12px}.cost-head{margin-bottom:9px;gap:10px}.cost-head h3{font-size:12px}.cost-head span{font-size:8px}.cost-row{font-size:10px;grid-template-columns:83px 1fr 40px;gap:8px;margin:10px 0}.cost-number{font-size:11px}.cost-formula{font-size:8px;padding-top:9px;margin-top:10px}.memory-note{font-size:9px;margin-top:9px}.rebuild-badge{font-size:8px}.shell:fullscreen{padding:0 18px}.shell:fullscreen .stage{overflow:auto}.shell:fullscreen .chapters{display:none}.shell:fullscreen .stage-body{padding-top:60px}.shell:fullscreen .narrative h1{font-size:30px}.shell:fullscreen .facts{display:none}}
+@media(prefers-reduced-motion:reduce){.toast,.shell.theater .transport,.shell.theater .chapters{transition:none}}
+/* Keep the entire film and its transport visible in ordinary desktop windows. */
+@media(min-width:761px){
+ .stage{min-height:510px;height:clamp(510px,calc(100vh - 304px),850px)}
+ .stage-body{padding-top:70px;padding-bottom:15px}
+ .narrative h1{font-size:clamp(35px,3.45vw,55px);margin-bottom:18px}
+ .eyebrow{margin-bottom:18px}.description{font-size:15px;line-height:1.8;margin-bottom:24px}
+ .facts{gap:13px}.fact-title{font-size:14px;line-height:1.55}.fact-sub{font-size:11px;line-height:1.6}
+ .narrative-foot{margin-top:23px;font-size:11px}
+ .visual{min-height:0}.graph{min-height:0}.graph-camera{aspect-ratio:auto;flex:1;min-height:0;height:0;max-height:none}
+ .node.l0{height:83px;padding:10px 15px}.node.l1{height:80px;padding:10px 15px}.node.l2{height:70px;padding:9px 12px}.node.worker{height:48px}
+ .node.l0 .node-title{font-size:20px;margin-top:6px}.node-title{font-size:16px;margin-top:6px}.node-sub{font-size:11px;margin-top:4px}.node-top{font-size:9px}
+ .graph-hud{min-height:37px;padding-top:12px;font-size:10px}.event-strip{margin-top:12px;min-height:35px}.event-chip{padding:7px;font-size:10px}
+ .machine{padding-top:9px}.machine .panel-label,.machine-foot{display:none}.runtime-head{padding-bottom:10px;margin-bottom:13px}.runtime-head h2{font-size:24px}.machine-track{aspect-ratio:820/175}
+ .runtime-detail{margin-top:12px}.runtime-card{padding:12px 14px;min-height:83px}.runtime-card h3{font-size:14px;margin-top:8px}.runtime-card p{font-size:11px}.guard-row{padding:12px 0}.machine-log{min-height:52px;font-size:11px;line-height:1.8}
+ .memory{padding-top:10px}.memory .panel-label{display:none}.memory-box{padding:13px 15px}.memory-box h2{font-size:18px}.memory-box .overline{font-size:9px;margin-bottom:7px}.memory-box .support{font-size:12px;line-height:1.6;margin-bottom:11px}
+ .artifact{padding:7px 0;font-size:12px}.ctx-part{padding:10px}.ctx-part p{font-size:12px}.ctx-part .part-head{font-size:9px}.ctx-part .fill{margin-top:9px}.memory-bridge{height:36px;font-size:10px}
+ .cost-panel{padding:13px 16px}.cost-head{margin-bottom:11px}.cost-head h3{font-size:14px}.cost-row{margin:11px 0}.cost-formula{padding-top:11px;margin-top:11px}.memory-note{margin-top:11px;font-size:11px;line-height:1.7}
+ .shell:fullscreen .stage-body{padding-top:70px;padding-bottom:15px}
+}
+@media(min-width:761px) and (max-width:1100px){
+ .node.l0{height:74px;padding:8px 11px}.node.l1{height:70px;padding:8px 11px}.node.l2{height:62px;padding:7px 9px}.node.l0 .node-title{font-size:16px}.node-title{font-size:13px}.node-sub{font-size:10px}.node-top{font-size:8px}
+ .narrative h1{font-size:36px}.description{font-size:14px}.fact-title{font-size:13px}.graph-hud{font-size:9px}.runtime-head h2{font-size:20px}.runtime-card h3{font-size:12px}.runtime-card p{font-size:10px}.state-name{font-size:10px}
+ .memory-box{padding:12px}.memory-box h2{font-size:16px}.memory-box .support,.artifact,.ctx-part p{font-size:11px}.memory-note{font-size:10px}.cost-head h3{font-size:12px}
+}
+@media(max-width:760px){.graph-camera{aspect-ratio:auto;flex:1;min-height:0;height:0}.graph-hud{min-height:38px}.node.l0{height:70px}.node.l1{height:68px}.node.l2{height:59px}.node.worker{height:42px}.node.l2 .node-title{font-size:10px;white-space:normal;line-height:1.2;margin-top:4px}.machine .panel-label,.machine-foot,.memory .panel-label{display:none}.machine-track{aspect-ratio:820/200}.memory-box .support{margin-bottom:8px}.artifact{padding:6px 0}.memory{padding-top:10px}.memory-note{font-size:9px}}
+.shell.theater:not(.controls-awake) .transport,.shell.theater:not(.controls-awake) .chapters{opacity:0;pointer-events:none}
+.shell.theater.controls-awake .transport,.shell.theater.controls-awake .chapters{opacity:1;pointer-events:auto}
+.shell.theater:not(.controls-awake){cursor:none}
+@media(min-width:761px){.stage[data-scene="6"] .narrative h1{font-size:clamp(30px,3vw,49px)}}
+
+/* Visible scenes alone determine layout; hidden panels must not stretch the stage. */
+.visual{display:flex;align-items:center;min-height:0}
+.layer{display:none;width:100%}
+.layer.is-visible{display:block}
+.graph.is-visible{display:flex;min-height:0}
+.graph-camera{isolation:isolate}
+.graph-wires{z-index:-1}
+.graph-cue{position:absolute;left:3%;top:23%;width:27%;padding:10px 12px;border-left:2px solid var(--cyan);background:linear-gradient(90deg,#112932d9,#0c192000);pointer-events:none}
+.cue-label{font:10px var(--mono);letter-spacing:.09em;color:var(--cyan);margin-bottom:7px}
+.cue-title{font-size:14px;color:var(--ink);line-height:1.5}
+.cue-detail{font-size:11px;line-height:1.65;color:var(--muted);margin-top:4px}
+.graph-toast{left:69%;max-width:29%;font-size:11px}
+.graph-toast small{font-size:12px;line-height:1.65;margin-top:3px}
+.event-chip{font-size:11px}.event-chip b{font-size:11px;font-weight:400;color:var(--ink)}
+.node[data-active="true"]{border-color:var(--cyan);box-shadow:0 0 23px #67d4e619,0 7px 25px #0004}
+.node[data-active="true"] .node-top{color:var(--cyan)}
+.worker[data-status="RUNNING"]{border-color:#527c87}
+.worker[data-status="RUNNING"]:after{position:absolute;content:"";bottom:0;left:0;height:2px;width:var(--work-progress,0%);background:var(--cyan)}
+.cost-head span b{color:var(--green);font-weight:400}
+.cost-basis{font-size:10px;color:var(--muted);line-height:1.5;margin:7px 0 0}
+.cost-formula{line-height:1.5}
+@media(min-width:1101px){.node-sub{font-size:12px}.fact-sub{font-size:12px}.graph-hud{font-size:11px}.worker-name{font-size:12px}.worker-state{font-size:10px}}
+@media(min-width:761px) and (max-height:830px){
+ .masthead{height:66px}.stage{min-height:440px;height:calc(100vh - 252px)}
+ .stage-body{padding-top:60px;padding-bottom:12px}.scene-top{top:22px}
+ .narrative h1{font-size:clamp(33px,3.15vw,45px);margin-bottom:16px}
+ .stage[data-scene="6"] .narrative h1{font-size:clamp(30px,2.8vw,40px)}
+ .eyebrow{margin-bottom:14px;font-size:11px;letter-spacing:.1em}
+ .description{font-size:14px;line-height:1.75;margin-bottom:18px}.facts{gap:11px}
+ .fact-title{font-size:14px;line-height:1.55}.fact-sub{font-size:12px;line-height:1.6}.narrative-foot{display:none}
+ .node.l0{height:76px;padding:8px 13px}.node.l1{height:74px;padding:8px 13px}.node.l2{height:66px;padding:8px 10px}.node.worker{height:45px}
+ .node.l0 .node-title{font-size:19px;margin-top:5px}.node-title{font-size:15px;margin-top:5px}.node-sub{margin-top:4px}
+ .graph-hud{padding-top:10px;min-height:35px}.event-strip{margin-top:9px;min-height:34px}
+ .memory-box{padding:11px 13px}.memory-box h2{font-size:17px}.memory-box .overline{margin-bottom:5px}
+ .memory-box .support{margin-bottom:7px;font-size:11px}.artifact{padding:6px 0}.ctx-part{padding:8px;margin-bottom:5px}
+ .ctx-part .part-head{margin-bottom:5px}.ctx-part .fill{margin-top:7px}.rebuild-badge{margin-top:8px}.memory-bridge{height:29px}
+ .cost-panel{padding:11px 14px}.cost-head{margin-bottom:8px}.cost-row{margin:8px 0}.cost-formula{margin-top:7px;padding-top:7px}
+ .memory-note{margin-top:8px;line-height:1.6}.cost-basis{margin-top:5px}
+ .caption{height:48px;font-size:14px}.chapters{padding-top:12px;padding-bottom:10px}.chapter{padding-top:8px}
+ .transport{height:60px}.footer-note{height:24px}
+ .shell:fullscreen .stage-body{padding-top:60px;padding-bottom:12px}
+}
+@media(min-width:761px) and (max-width:1100px){.cue-title{font-size:12px}.cue-detail{font-size:10px}.graph-cue{padding:8px}.node-title{font-size:13px}.node.l0 .node-title{font-size:16px}.node-sub{font-size:10px}.fact-sub{font-size:11px}.graph-hud{font-size:9px}.graph-toast small{font-size:10px}}
+@media(max-width:760px){.graph-cue{left:0;top:22%;width:30%;padding:6px}.cue-label{font-size:8px;margin-bottom:3px}.cue-title{font-size:10px}.cue-detail{font-size:9px}.graph-toast{font-size:9px;padding:6px;left:70%}.graph-toast small{font-size:9px}.graph-hud{flex-wrap:wrap;padding-top:9px;min-height:46px}.event-chip{font-size:8px;flex-wrap:wrap;padding:5px}.event-chip span{font-size:8px}.event-chip b{font-size:9px}.visual-top{top:-9px}.cost-basis{font-size:9px}}
+
+
+/* Explicit leading keeps Chinese and Latin node labels inside their cards. */
+.node-top{line-height:1.2}.tier{font-size:10px;line-height:1.2;padding:1px 4px}
+.node-title,.node.l0 .node-title{line-height:1.25;margin-top:4px}.node-sub{line-height:1.3;margin-top:3px}
+.node.l2{padding-top:7px;padding-bottom:7px}.node.l2 .node-title{font-size:14px;margin-top:4px}
+@media(min-width:761px) and (max-height:950px){
+ .node.l0{height:80px}.node.l1{height:74px}.node.l2{height:70px}.node.l1{padding-top:7px;padding-bottom:7px}.node-sub{font-size:11px}
+ .memory{padding-top:18px}.memory-box .support{display:none}.memory-box h2{line-height:1.3;margin-bottom:8px}
+ .memory-box .overline{line-height:1.2}.artifact{padding:5px 0;line-height:1.35}.rebuild-badge{line-height:1.2}
+ .ctx-part{padding:6px 8px}.ctx-part .part-head{line-height:1.2;margin-bottom:4px}.ctx-part .fill{display:none}
+ .memory-bridge{height:24px}.cost-panel{padding:9px 13px}.cost-head{margin-bottom:6px}.cost-head h3{font-size:13px}
+ .cost-head span{font-size:9px;line-height:1.35}.cost-row{margin:6px 0;line-height:1.4}.cost-basis{margin-top:5px;line-height:1.35}
+ .cost-formula{padding-top:6px;margin-top:6px;line-height:1.35}.memory-note{font-size:11px;line-height:1.4;margin-top:7px}
+ .runtime-head{padding-bottom:8px;margin-bottom:10px}.runtime-head h2{font-size:22px;line-height:1.3}
+ .machine-track{aspect-ratio:820/150}.state{height:50px;padding:8px;gap:4px}.state-name{font-size:11px;line-height:1.25}.state-zh{line-height:1.25}
+ .runtime-detail{margin-top:10px}.runtime-card{padding:10px 12px;min-height:80px}.runtime-card h3{margin:6px 0 4px;line-height:1.35}
+ .guard-row{padding:8px 0;line-height:1.3}.machine-log{min-height:50px;line-height:1.7}
+}
+@media(min-width:761px) and (max-width:1100px){.node.l2 .node-title{font-size:12px}.node-sub{font-size:10px}}
+@media(max-width:760px){.node.l2 .node-title{font-size:10px}.node-top{line-height:1.1}.tier{font-size:8px}.node-sub{font-size:9px}.node.l2{padding-top:5px;padding-bottom:5px}}
+
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+  <header class="masthead">
+    <div class="identity">
+      <svg class="logo" viewBox="0 0 36 38" fill="none" aria-hidden="true"><path d="M18 2 34 10 18 18 2 10 18 2Z" stroke="currentColor" stroke-width="1.4"/><path d="m2 19 16 8 16-8M2 28l16 8 16-8" stroke="currentColor" stroke-width="1.4"/><path d="M18 18v18" stroke="currentColor" opacity=".35"/></svg>
+      <div class="wordmark">HIERARCHICAL <span>/ AGENT OS</span></div>
+    </div>
+    <div class="mast-meta"><span class="meta-copy">A SYSTEM FOR LONG-HORIZON INTELLIGENCE</span><span class="film-badge">ARCHITECTURE FILM · 01</span></div>
+  </header>
+  <main class="stage" id="stage" aria-label="分层智能体操作系统动画演示">
+    <canvas id="ambient" aria-hidden="true"></canvas>
+    <div class="scene-top"><div><span class="scene-index" id="sceneCounter">01 / 06</span><span class="slashes">//</span><span id="sceneName">分层认知</span></div><div class="scene-top-right"><span>CONCEPTUAL SYSTEM</span><span><i class="signal" id="signal"></i> <span id="runLabel">RUNNING</span></span></div></div>
+    <div class="stage-body">
+      <section class="narrative" id="narrative" aria-label="当前场景说明">
+        <p class="eyebrow" id="eyebrow">01 — THE HIERARCHY</p>
+        <h1 id="headline">智能分层，<br><em>系统有序。</em></h1>
+        <p class="description" id="description">将战略、审核与执行放在不同层级。让模型的能力，匹配任务的价值。</p>
+        <div class="facts" id="facts"></div>
+        <div class="narrative-foot" id="narrativeFoot">长任务的连续性，来自系统保存的状态。</div>
+      </section>
+      <section class="visual" id="visual" aria-label="架构动态示意">
+        <div class="visual-top"><span id="visualLabel">COGNITIVE TOPOLOGY</span><span id="visualMeta"><b>1 → 1 → 3 → 9</b> · 拓扑示意</span></div>
+        <div class="layer graph" id="graphLayer">
+          <div class="graph-camera" id="graphCamera">
+            <svg class="graph-wires" id="graphWires" viewBox="0 0 900 570" preserveAspectRatio="none" role="img" aria-label="L0 战略智能体通过 L1 审核协调层，连接 L2 专家和 L3 执行者。任务向下，事件逐级向上。">
+              <defs><filter id="soft-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+              <g id="wireGroup"></g><g id="packetGroup"></g>
+            </svg>
+            <div id="nodes"></div>
+            <div class="graph-cue" id="graphCue"><div class="cue-label" id="cueLabel"></div><div class="cue-title" id="cueTitle"></div><div class="cue-detail" id="cueDetail"></div></div>
+            <div class="graph-toast" id="graphToast"></div>
+          </div>
+          <div class="event-strip" id="eventStrip"><div class="event-chip" data-event="DONE">DONE <span>证据齐全</span></div><div class="event-chip" data-event="FAILED">FAILED <span>执行失败</span></div><div class="event-chip" data-event="BLOCKED">BLOCKED <span>等待依赖</span></div><div class="event-chip" data-event="ESCALATE">ESCALATE <span>超出能力</span></div></div>
+          <div class="graph-hud"><span id="graphHudText">CAPABILITY <b>↓</b> · POPULATION <b>↑</b> · LIFETIME <b>↓</b></span><div class="legend"><span class="legend-item"><i class="legend-line"></i>任务下行</span><span class="legend-item"><i class="legend-line up"></i>事件上行</span></div></div>
+        </div>
+        <div class="layer machine" id="machineLayer">
+          <div class="panel-label">EXECUTION PLANE <span>/ DETERMINISTIC ORCHESTRATOR</span></div>
+          <div class="runtime-head"><h2>失败，是一次受控的状态转移。</h2><small id="attemptLabel">ATTEMPT 01 / 03</small></div>
+          <div class="machine-track" id="machineTrack">
+            <svg viewBox="0 0 820 268" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="#3c555f" stroke-width="1.3"><path d="M217 62H299M504 62H586M688 102V167M586 207H504"/><path id="failurePath" d="M688 102V145H114V167" stroke="#ff897c" stroke-dasharray="3 5" opacity=".5"/><path id="retryPath" d="M114 167V125H401V102" stroke="#f4b96f" stroke-dasharray="5 6"/></g><g fill="#56737c"><path d="m293 58 7 4-7 4zM580 58l7 4-7 4zM684 160l4 7 4-7zM511 203l-7 4 7 4z"/></g><circle id="machinePulse" r="4" fill="#a6f1cb" opacity="0"/></svg>
+            <div class="state" data-state="PLANNING" style="left:14%;top:23%"><span class="state-name">PLANNING</span><span class="state-zh">规划与拆分</span></div>
+            <div class="state" data-state="IMPLEMENTING" style="left:49%;top:23%"><span class="state-name">IMPLEMENTING</span><span class="state-zh">派发执行</span></div>
+            <div class="state" data-state="TESTING" style="left:84%;top:23%"><span class="state-name">TESTING</span><span class="state-zh">运行测试</span></div>
+            <div class="state error" data-state="FIX_REQUIRED" style="left:14%;top:77%"><span class="state-name">FIX_REQUIRED</span><span class="state-zh">生成回归任务</span></div>
+            <div class="state" data-state="DONE" style="left:49%;top:77%"><span class="state-name">DONE</span><span class="state-zh">验收通过</span></div>
+            <div class="state" data-state="VERIFYING" style="left:84%;top:77%"><span class="state-name">VERIFYING</span><span class="state-zh">L1 审核证据</span></div>
+            <div class="loop-label">FAIL → FIX_REQUIRED → IMPLEMENTING</div>
+          </div>
+          <div class="runtime-detail"><div class="runtime-card"><div class="role">LLM / JUDGMENT</div><h3 id="llmAction">分析目标，提出执行计划</h3><p>规划 · 分析原因 · 审核结果 · 提议修复</p></div><div class="runtime-card"><div class="role">RUNTIME / CONTROL</div><h3 id="runtimeAction">按规则派发并记录状态</h3><p>状态 · 生命周期 · 重试 · 权限 · 调度</p></div></div>
+          <div class="guard-row"><span>retry_budget <b>3</b></span><span>permission <b>SCOPED</b></span><span>worker <b id="generationLabel">gen.01</b></span></div>
+          <div class="machine-log" id="machineLog">plan.accepted → IMPLEMENTING<br>状态写入 ledger；创建受限权限的 Worker。</div>
+          <div class="machine-foot">依赖未就绪 → BLOCKED / 等待事件；重试耗尽 → ESCALATE / 请求上层决策。回滚仅执行已定义的补偿动作。</div>
+        </div>
+        <div class="layer memory" id="memoryLayer">
+          <div class="panel-label">MEMORY PLANE <span>/ STATE OUTLIVES SESSIONS</span></div>
+          <div class="memory-layout">
+            <div class="memory-box"><div class="overline">DURABLE STATE</div><h2>长期状态外置</h2><div class="support">任务、决策、证据与检查点持续保存。</div><div class="artifact"><span>Task & Event Ledger</span><span class="hash" id="ledgerVersion">v.042</span></div><div class="artifact"><span>Artifacts & Evidence</span><span class="hash">hash:7a2f</span></div><div class="artifact"><span>Checkpoint & Summary</span><span class="hash">source refs</span></div><div class="rebuild-badge" id="rebuildBadge">WORKER gen.08 · ACTIVE</div></div>
+            <div class="memory-box"><div class="overline">BOUNDED CONTEXT</div><h2>按需装入任务包</h2><div class="support">运行时检索必要片段；摘要保留原始来源。</div><div class="ctx-part"><div class="part-head"><span>STABLE PREFIX</span><span>8k</span></div><p>角色 · 固定规则 · 验收约束</p><div class="fill" id="prefixFill"></div></div><div class="ctx-part delta"><div class="part-head"><span>TASK DELTA</span><span>2–4k</span></div><p>当前任务 · 必要代码 · 最新证据</p><div class="fill" id="deltaFill"></div></div></div>
+          </div>
+          <div class="memory-bridge"><span class="bridge-line"></span><span id="memoryBridgeText">CHECKPOINT → REBUILD → RESTORE</span><span class="bridge-line"></span></div>
+          <div class="cost-panel"><div class="cost-head"><h3>让上下文随任务变化，而非随历史膨胀。</h3><span><b id="requestCount">0 / 4 次请求</b> · 示例输入量<br>预算示意，非实测节省比例</span></div><div class="cost-row"><span>累积完整历史</span><div class="bar-track"><div class="bar" id="historyBar" style="width:100%"></div></div><span class="cost-number" id="historyValue">175k</span></div><div class="cost-row"><span>按需任务包</span><div class="bar-track"><div class="bar optimized" id="packetBar" style="width:25.14%"></div></div><span class="cost-number" id="packetValue">44k</span></div><div class="cost-basis">完整历史：20 + 35 + 50 + 70k · 任务包：10 + 10 + 12 + 12k</div><div class="cost-formula"><b>COST</b> = uncached × rate + cached × rate + output × rate</div></div>
+          <div class="memory-note"><b>压缩保留决策与证据索引；原文可检索恢复。</b> 缓存命中依赖完全相同的前缀、模型与服务策略；过期重新计算。长期身份不等于长期保留 KV 缓存。分层不保证省 token，仍需控制调用次数与任务包大小。</div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <div class="caption" aria-live="off"><span class="caption-label">旁白字幕</span><span id="captionText">上层保留判断力，下层释放执行力。</span></div>
+  <nav class="chapters" id="chapters" aria-label="选择演示章节"></nav>
+  <div class="transport" aria-label="播放控制">
+    <div class="controls"><button class="play-button" id="playButton" aria-label="暂停"><svg viewBox="0 0 16 16" aria-hidden="true" id="playIcon"><path fill="currentColor" d="M4 3h3v10H4zM9 3h3v10H9z"/></svg><span id="playText">暂停</span></button><button class="icon-button" id="replayButton" aria-label="从头重播" title="从头重播 · R"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7a7 7 0 1 1-.5 5M4 2v5h5"/></svg></button><button class="speed-button" id="speedButton" aria-label="播放速度：1 倍" title="切换播放速度">1×</button></div>
+    <div class="scrub"><input class="seek" id="seek" type="range" min="0" max="138" step="0.1" value="0" aria-label="播放进度（秒）"><div class="timecode"><strong id="currentTime">00:00</strong> / <span id="durationTime">02:18</span></div></div>
+    <div class="transport-right"><span class="key-hint">SPACE 暂停 · ← → 跳转</span><button class="icon-button" id="loopButton" aria-label="循环播放" aria-pressed="false" title="循环播放 · L"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4H6a3 3 0 0 0-3 3v3M15 1v6l3-3-3-3ZM5 16h9a3 3 0 0 0 3-3v-3M5 19v-6l-3 3 3 3Z"/></svg></button><button class="icon-button" id="theaterButton" aria-label="录屏模式" aria-pressed="false" title="录屏模式 · C"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="3.5" width="16" height="13" rx="1"/><path d="M2 7h16M2 13h16"/></svg></button><button class="icon-button" id="fullscreenButton" aria-label="全屏" title="全屏 · F"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3H3v4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg></button></div>
+  </div>
+  <div class="footer-note"><span>分层智能体操作系统 · 概念架构演示 · 所有数量与预算均为示意</span><span>OFFLINE / SELF-CONTAINED / 02:18</span></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<noscript><div class="noscript">请开启浏览器 JavaScript 以播放动画。此文件不需要网络连接。</div></noscript>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const clamp = (v,a=0,b=1) => Math.min(b,Math.max(a,v));
+  const smooth = v => {v=clamp(v);return v*v*(3-2*v);};
+  const lerp = (a,b,p) => a+(b-a)*p;
+  const colors = {DONE:'#a6f1cb',FAILED:'#ff897c',BLOCKED:'#f4b96f',ESCALATE:'#b8b4f4',TASK:'#67d4e6'};
+  const scenes = [
+    {start:0,end:23,name:'分层认知',label:'THE HIERARCHY',headline:'智能分层，\n<em>系统有序。</em>',description:'将战略、审核与执行放在不同层级。让模型的能力，匹配任务的价值。',facts:[['L0 · 最强模型，最长生命周期','只接收战略摘要、关键风险与待决策事项'],['L1 · Auditor / Coordinator','审核、校对、聚合结果，决定是否达到验收标准'],['L2 / L3 · 专家与执行者','能力逐级降低，数量与重建频率增加，生命周期缩短']],foot:'长期生命周期指逻辑身份与状态连续性。',visual:'COGNITIVE TOPOLOGY',meta:'<b>1 → 1 → 3 → 9</b> · 拓扑示意',captions:[[0,'上层保留判断力，下层释放执行力。'],[5,'L0 使用最强模型，以最长生命周期维持战略连续性。'],[11,'L1 审核、校对与协调；只有高价值摘要进入战略层。'],[17,'越向下，模型越轻、数量越多、会话越短、重建越频繁。']]},
+    {start:23,end:44,name:'任务下行',label:'DELEGATE WITH INTENT',headline:'目标向下，\n<em>上下文有界。</em>',description:'L0 定义方向与边界，L1 拆分目标，L2 组织专项，L3 接收可验收的任务包。',facts:[['任务包明确交付与验收','目标 · 约束 · 必要上下文 · 验收标准'],['权限与生命周期由运行时绑定','按角色和任务范围授予工具能力'],['仅装入完成任务所需的信息','先检索，再注入；每个 Worker 有明确预算']],foot:'模型负责规划；运行时验证与派发。',visual:'DOWNSTREAM / TASK DISPATCH',meta:'<b>INTENT → TASK → EXECUTION</b>',captions:[[0,'任务从战略层向下拆分，运行时按依赖关系调度。'],[5,'L1 把完整目标转成小而明确的任务包。'],[10,'L2 Specialists 组织专项，L3 Workers 执行有限任务。'],[16,'权限、超时与 token 预算随任务绑定，避免无限扩展。']]},
+    {start:44,end:68,name:'事件上行',label:'REPORT BY EVENTS',headline:'事件向上，\n<em>信号逐级收敛。</em>',description:'底层主动发布状态事件。每层验证、去重与聚合，只把需要上一层处理的信息继续上送。',facts:[['DONE / FAILED / BLOCKED / ESCALATE','携带任务 ID、版本、证据引用与失败原因'],['L1 审核证据并判断是否达标','达标提交摘要；未达标派发回归；必要时升级 L0'],['运行时管理保活与故障检测','租约与超时触发事件，不消耗上层模型轮询']],foot:'事件持久化、去重与顺序校验由程序完成。',visual:'UPSTREAM / EVENT AGGREGATION',meta:'<b>EVENT → EVIDENCE → DECISION</b>',captions:[[0,'底层主动通知，状态沿层级向上聚合。'],[6,'9 个底层事件聚合为 3 份专项报告，附带证据和异常清单。'],[11,'L1 核验证据：6 项完成、1 项回归、1 项等待、1 项需要升级。'],[16,'只有需要战略取舍的问题升级到 L0，其余问题在下层处理。'],[19,'运行时负责租约和超时；上层 LLM 无需反复询问存活状态。']]},
+    {start:68,end:94,name:'自动回归',label:'RECOVER BY STATE MACHINE',headline:'判断交给模型，\n<em>秩序交给程序。</em>',description:'测试失败形成事件。L1 分析原因并提出修复，Orchestrator 依据确定性规则派发回归任务。',facts:[['状态转移有明确前置条件','只有测试与验收证据通过，才能进入 DONE'],['重试有预算，失败有出口','依赖阻塞等待事件，重试耗尽升级上层'],['重建 Worker，恢复持久检查点','回滚执行预定义补偿，修复后重新测试与审核']],foot:'LLM 建议动作；状态机控制合法执行。',visual:'CONTROL PLANE / RECOVERY',meta:'<b>GUARDS · RETRIES · PERMISSIONS</b>',captions:[[0,'模型给出判断与计划，程序掌握状态、生命周期、重试、权限与调度。'],[7,'测试失败：FAILED 事件写入账本，状态机进入 FIX_REQUIRED。'],[11,'L1 给出修复任务；运行时检查重试预算与权限，重建 Worker。'],[17,'修复后必须重新测试和验收，不能由模型的一句“完成”跳过。'],[23,'只有证据通过，任务才进入 DONE；预算耗尽则升级。']]},
+    {start:94,end:118,name:'记忆与成本',label:'PERSIST STATE, BOUND CONTEXT',headline:'状态长期保存，\n<em>上下文按需生长。</em>',description:'把长期记忆放在系统中。通过可追溯压缩、稳定前缀与短任务包，控制长任务的上下文成本。',facts:[['记忆外置，会话可以重建','账本 · 制品 · 决策摘要 · 检查点 · 原文索引'],['缓存稳定前缀，隔离任务增量','相同前缀才可能复用；过期重新计算'],['短上下文与预算共同约束成本','按层路由模型，限制调用、输出和重复重试']],foot:'上下文上限、压缩与缓存是不同的机制。',visual:'MEMORY PLANE / TOKEN ECONOMY',meta:'<b>DURABLE STATE + MINIMAL CONTEXT</b>',captions:[[0,'长期状态在会话之外，Worker 结束不等于任务记忆消失。'],[6,'压缩保留决策、证据和原文引用；必要时检索恢复。'],[12,'稳定前缀争取缓存复用，动态任务放在末尾；缓存过期可重新计算。'],[18,'175k 与 44k 是四次输入的示意，实际成本仍取决于缓存、输出与调用次数。']]},
+    {start:118,end:138,name:'系统收束',label:'THE COMPLETE SYSTEM',headline:'让最强的模型，\n<em>只思考最重要的事。</em>',description:'认知分层，执行受控，状态持久。让长期任务在可恢复、可审计的系统中推进。',facts:[['向下派发明确的任务','目标与边界 → 专项计划 → 小任务包'],['向上聚合可验证的证据','执行事件 → 审核结果 → 高价值战略摘要'],['模型能力与系统可靠性共同工作','LLM 负责判断与规划，运行时维护执行秩序']],foot:'Hierarchical Agent OS / 分层智能体操作系统',visual:'ONE SYSTEM / TWO COMPLEMENTARY PLANES',meta:'<b>INTELLIGENCE × RELIABILITY</b>',captions:[[0,'分层智能体操作系统：任务向下，事件向上，状态长期保存。'],[6,'高层保持战略连续，低层按任务重建；信息在每层收敛。'],[12,'把有限的上下文与最强的判断力，留给真正重要的问题。'],[17,'LLM 负责判断与规划。程序负责状态、生命周期、重试、权限与调度。']]}
+  ];
+  const total = scenes[scenes.length-1].end;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let time = 0, playing = !reduceMotion, speed = 1, loop = false, sceneIndex = -1, previousFrame = null, lastUI = -1, toastTimer = null, controlsTimer = null;
+  let packets = [], edges = [], nodeEls = [], lastCaption = '', lastRecoveryIndex = -1;
+  let graphLayout = null;
+  const setText = (id,value) => {const el=$(id);if(el.textContent!==value)el.textContent=value;};
+  const setHTML = (id,value) => {const el=$(id);if(el.innerHTML!==value)el.innerHTML=value;};
+  const geometry = [
+    {id:'l0',tier:'L0',kind:'l0',x:450,y:72,title:'Strategic Agent',sub:'最强模型 · 最长生命周期',top:'STRATEGY / LONG-LIVED'},
+    {id:'l1',tier:'L1',kind:'l1',x:450,y:231,title:'Auditor / Coordinator',sub:'审核 · 校对 · 聚合 · 回归 · 升级',top:'QUALITY / COORDINATION'},
+    {id:'l2a',tier:'L2',kind:'l2',x:150,y:386,title:'Research Specialist',sub:'专项阶段 · 中等模型',top:'RESEARCH'},
+    {id:'l2b',tier:'L2',kind:'l2',x:450,y:386,title:'Coding Specialist',sub:'专项阶段 · 中等模型',top:'BUILD'},
+    {id:'l2c',tier:'L2',kind:'l2',x:750,y:386,title:'Testing Specialist',sub:'专项阶段 · 中等模型',top:'VERIFY'},
+    ...[60,150,240,360,450,540,660,750,840].map((x,i)=>({id:'w'+i,tier:'L3',kind:'worker',x,y:516,title:'L3.'+String(i+1).padStart(2,'0'),sub:'IDLE'}))
+  ];
+  for(const n of geometry){
+    const el = document.createElement('div');el.className='node '+n.kind;el.id='node-'+n.id;el.dataset.tier=n.tier;el.style.left=n.x/9+'%';el.style.top=n.y/5.7+'%';
+    el.innerHTML = n.kind==='worker' ? '<span class="worker-name">'+n.title+'</span><span class="worker-state">IDLE</span>' : '<div class="node-top"><span class="tier">'+n.tier+'</span><span>'+n.top+'</span></div><div class="node-title">'+n.title+'</div><div class="node-sub">'+n.sub+'</div>';
+    $('nodes').appendChild(el);nodeEls.push(el);
+  }
+  const pairs=[['l0','l1'],['l1','l2a'],['l1','l2b'],['l1','l2c'],...geometry.filter(n=>n.kind==='worker').map((n,i)=>[['l2a','l2b','l2c'][Math.floor(i/3)],n.id])];
+  pairs.forEach(([from,to],i)=>{
+    const a=geometry.find(n=>n.id===from),b=geometry.find(n=>n.id===to);
+    const ay=a.y+(a.kind==='l0'||a.kind==='l1'?48:40),by=b.y-(b.kind==='l1'?48:b.kind==='l2'?40:28),mid=(ay+by)/2;
+    const path=document.createElementNS(svgNS,'path');path.classList.add('wire');path.setAttribute('d',`M${a.x} ${ay} C${a.x} ${mid} ${b.x} ${mid} ${b.x} ${by}`);$('wireGroup').appendChild(path);
+    const g=document.createElementNS(svgNS,'g');g.classList.add('path-packet');const circle=document.createElementNS(svgNS,'circle');circle.setAttribute('r','3.8');const label=document.createElementNS(svgNS,'text');label.setAttribute('x','9');label.setAttribute('y','3');g.append(circle,label);$('packetGroup').appendChild(g);
+    edges.push({path,from,to,level:a.tier,index:i,aIndex:geometry.indexOf(a),bIndex:geometry.indexOf(b),lastD:''});packets.push({g,circle,label});
+  });
+  scenes.forEach((scene,i)=>{const button=document.createElement('button');button.className='chapter';button.setAttribute('aria-label','章节 '+(i+1)+'：'+scene.name);button.innerHTML='<span class="ch-num">'+String(i+1).padStart(2,'0')+'</span>'+scene.name;button.addEventListener('click',()=>seekTo(scene.start));$('chapters').appendChild(button);});
+  const workerStateEls=nodeEls.slice(5).map(el=>el.querySelector('.worker-state'));
+  const eventChipEls=Array.from(document.querySelectorAll('.event-chip'));
+  const eventDescriptions={DONE:'附完成证据',FAILED:'派发回归',BLOCKED:'等待依赖',ESCALATE:'请求决策'};
+  eventChipEls.forEach(el=>el.innerHTML=el.dataset.event+' <b>0</b><span>'+eventDescriptions[el.dataset.event]+'</span>');
+  const eventCountEls=eventChipEls.map(el=>el.querySelector('b'));
+  const chapterEls=Array.from($('chapters').children);
+  const stateEls=Array.from(document.querySelectorAll('.state'));
+
+  // This reducer is the illustrative runtime. The model's suggestions are events,
+  // not authority to skip transitions or mutate a task's lifecycle directly.
+  const transitionTable={
+    PLANNING:{PLAN_ACCEPTED:'IMPLEMENTING'},
+    IMPLEMENTING:{WORK_DONE:'TESTING',DEPENDENCY_BLOCKED:'BLOCKED',EXECUTION_FAILED:'FIX_REQUIRED'},
+    TESTING:{TEST_FAILED:'FIX_REQUIRED',TEST_PASSED:'VERIFYING'},
+    FIX_REQUIRED:{REPAIR_APPROVED:'IMPLEMENTING',BUDGET_EXHAUSTED:'ESCALATED'},
+    VERIFYING:{AUDIT_PASSED:'DONE',AUDIT_FAILED:'FIX_REQUIRED'},
+    BLOCKED:{DEPENDENCY_READY:'IMPLEMENTING',BLOCK_TIMEOUT:'ESCALATED'},
+    ESCALATED:{DECISION_APPROVED:'IMPLEMENTING'},DONE:{}
+  };
+  function reduceTask(task,event){
+    if(task.seen.includes(event.id))return task;
+    const next=transitionTable[task.state]?.[event.type];
+    if(!next)throw new Error('Illegal transition: '+task.state+' / '+event.type);
+    if(['PLAN_ACCEPTED','REPAIR_APPROVED','DECISION_APPROVED'].includes(event.type)&&!event.permission)throw new Error('Permission guard rejected event');
+    if(event.type==='REPAIR_APPROVED'&&task.attempt>=task.budget)throw new Error('Retry budget exceeded');
+    if(['TEST_PASSED','AUDIT_PASSED'].includes(event.type)&&!event.evidence)throw new Error('Evidence guard rejected event');
+    if(event.type==='BUDGET_EXHAUSTED'&&task.attempt<task.budget)throw new Error('Retry budget remains');
+    return {...task,state:next,attempt:task.attempt+(event.type==='REPAIR_APPROVED'?1:0),generation:task.generation+(event.type==='REPAIR_APPROVED'?1:0),seen:[...task.seen,event.id]};
+  }
+  const recoveryEvents=[
+    {at:0,type:null,llm:'分析目标，提出执行计划',runtime:'等待合法的计划事件',log:'task.created → PLANNING',detail:'任务与验收条件写入外部账本。'},
+    {at:2,type:'PLAN_ACCEPTED',permission:true,llm:'L1 校对计划与验收边界',runtime:'按权限范围创建 Worker',log:'plan.accepted → IMPLEMENTING',detail:'运行时派发任务；记录检查点与 gen.01。'},
+    {at:5,type:'WORK_DONE',llm:'Worker 提交制品与证据引用',runtime:'派发独立测试任务',log:'worker.done → TESTING',detail:'DONE 事件表示执行结束，仍需测试与审核。'},
+    {at:7,type:'TEST_FAILED',llm:'L1 分析失败原因与修复范围',runtime:'记录 FAILED；进入回归状态',log:'test.failed → FIX_REQUIRED',detail:'错误证据：接口边界不一致；禁止直接标记完成。'},
+    {at:11,type:'REPAIR_APPROVED',permission:true,llm:'L1 派发修复与回归测试要求',runtime:'检查预算；重建 Worker gen.02',log:'repair.approved → IMPLEMENTING',detail:'重试第 2 次 / 上限 3 次；从检查点恢复必要上下文。'},
+    {at:16,type:'WORK_DONE',llm:'新 Worker 提交修复制品',runtime:'重新派发测试，保留原始证据',log:'worker.done → TESTING',detail:'修复不能沿用失败前的通过假设，必须重新运行测试。'},
+    {at:19,type:'TEST_PASSED',evidence:'test-report-v2',llm:'L1 审核测试与目标是否一致',runtime:'验证测试证据；进入验收',log:'test.passed → VERIFYING',detail:'证据 test-report-v2 有效，等待 L1 结论。'},
+    {at:23,type:'AUDIT_PASSED',evidence:'audit-v2',llm:'L1 确认达标，提交聚合摘要',runtime:'持久化 DONE；回收 Worker',log:'audit.passed → DONE',detail:'验收证据 audit-v2 通过；输出带来源的上行摘要。'}
+  ];
+  let task={state:'PLANNING',attempt:1,budget:3,generation:1,seen:[]};
+  const trace=recoveryEvents.map((event,i)=>{if(event.type)task=reduceTask(task,{...event,id:'evt-'+i});return {...event,task:{...task}};});
+
+  function setScene(index){
+    sceneIndex=index;const scene=scenes[index];$('stage').dataset.scene=String(index+1);
+    $('sceneCounter').textContent=String(index+1).padStart(2,'0')+' / 06';$('sceneName').textContent=scene.name;$('eyebrow').textContent=String(index+1).padStart(2,'0')+' — '+scene.label;$('headline').innerHTML=scene.headline.replace(/\n/g,'<br>');$('description').textContent=scene.description;
+    $('facts').innerHTML=scene.facts.map((fact,i)=>'<div class="fact"><span class="fact-num">0'+(i+1)+'</span><div><div class="fact-title">'+fact[0]+'</div><div class="fact-sub">'+fact[1]+'</div></div></div>').join('');$('narrativeFoot').textContent=scene.foot;$('visualLabel').textContent=scene.visual;$('visualMeta').innerHTML=scene.meta;
+    const graphVisible=[0,1,2,5].includes(index);$('graphLayer').classList.toggle('is-visible',graphVisible);$('machineLayer').classList.toggle('is-visible',index===3);$('memoryLayer').classList.toggle('is-visible',index===4);
+    $('graphLayer').setAttribute('aria-hidden',String(!graphVisible));$('machineLayer').setAttribute('aria-hidden',String(index!==3));$('memoryLayer').setAttribute('aria-hidden',String(index!==4));
+    chapterEls.forEach((el,i)=>{el.classList.toggle('active',i===index);if(i===index)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
+    $('eventStrip').style.display=index===2?'grid':'none';$('eventStrip').style.opacity=index===2?'1':'0';
+    graphLayout=null;lastRecoveryIndex=-1;lastCaption='';
+  }
+
+  const workerEvents=['DONE','DONE','FAILED','DONE','BLOCKED','DONE','ESCALATE','DONE','DONE'];
+  // The schedule is a pure function of film time. Pause, replay and reverse seeks
+  // must produce exactly the same scene, and parents send only after aggregation.
+  function flowSchedule(index,edge){
+    if(index===1){
+      const start=edge===0?1:edge<4?4+(edge-1)*.5:8+(edge-4)*.28;
+      return {start,end:start+2,up:false,type:'TASK',label:edge===0?'INTENT':edge<4?'TASK':''};
+    }
+    if(index===2){
+      if(edge>=4){const start=2+(edge-4)*.4;return {start,end:start+2,up:true,type:workerEvents[edge-4],label:workerEvents[edge-4]};}
+      if(edge>0){const start=5.4+(edge-1)*1.2;return {start,end:start+2.3,up:true,type:'DONE',label:'REPORT · 3'};}
+      return {start:16,end:18.4,up:true,type:'ESCALATE',label:'ESCALATE'};
+    }
+    if(index===5){
+      const start=edge>=4?1+(edge-4)*.18:edge>0?5+(edge-1)*.4:9;
+      return {start,end:start+2,up:true,type:'DONE',label:edge===0?'SUMMARY':edge<4?'REPORT':''};
+    }
+    return null;
+  }
+  function graphCue(local,index){
+    const counts={DONE:0,FAILED:0,BLOCKED:0,ESCALATE:0};
+    let received=0,reports=0,escalations=0;
+    if(index===2){
+      workerEvents.forEach((type,i)=>{if(local>=flowSchedule(2,i+4).end){counts[type]++;received++;}});
+      for(let i=1;i<=3;i++)if(local>=flowSchedule(2,i).end)reports++;
+      if(local>=flowSchedule(2,0).end)escalations=1;
+    }
+    const stage=index===0?(local<4?0:local<10?1:2):index===1?(local<3.5?0:local<7.5?1:local<13?2:3):index===2?(local<5.4?0:local<11?1:local<16?2:3):(local<7?0:local<13?1:2);
+    const copy=index===0?[
+      ['STRATEGIC CORE','L0 · 战略连续','最强模型 / 最少高价值信息'],
+      ['EXPAND THE SYSTEM','能力向下，规模向上','L1 审核协调 · L2 专项规划'],
+      ['SHORT-LIVED WORKERS','L3 · 轻量执行','短会话 / 小任务 / 高频重建']
+    ]:index===1?[
+      ['01 / INTENT','L0 定义目标','目标、边界与验收标准'],
+      ['02 / DECOMPOSE','L1 拆分任务包','运行时绑定权限与预算'],
+      ['03 / DISPATCH','L2 派发专项任务','任务抵达后，Worker 开始执行'],
+      ['04 / EXECUTE','L3 并行执行','按依赖调度，按任务回收']
+    ]:index===2?[
+      ['01 / EMIT','L3 发布事件','状态、任务版本与证据引用'],
+      ['02 / AGGREGATE','L2 汇聚专项结果','9 个事件 → 3 份报告'],
+      ['03 / AUDIT','L1 核验证据','6 完成 · 1 回归 · 1 等待'],
+      ['04 / ESCALATE','L0 接收关键异常','仅 1 项需要战略决策']
+    ]:[
+      ['CLOSE THE LOOP','执行结果逐级收敛','证据随事件上行'],
+      ['HIGH-VALUE SIGNAL','L1 保留执行细节','向 L0 提交可追溯摘要'],
+      ['CONTINUITY','认知集中，状态持久','低层重建，高层保持方向']
+    ];
+    return {stage,copy:copy[stage],counts,received,reports,escalations};
+  }
+  function workerStatus(index,status){const el=nodeEls[index+5];if(el.dataset.status!==status){el.dataset.status=status;workerStateEls[index].textContent=status;}}
+  function graphFrame(local,index){
+    const intro=index===0,up=index===2,down=index===1,final=index===5,cue=graphCue(local,index);
+    if(!graphLayout){
+      graphLayout={width:$('graphCamera').clientWidth,height:$('graphCamera').clientHeight,heights:nodeEls.map(el=>el.offsetHeight)};
+      $('graphWires').setAttribute('viewBox',`0 0 ${graphLayout.width} ${graphLayout.height}`);
+    }
+    const {width,height,heights}=graphLayout;
+    const expand=intro?smooth(local/10):1,collapse=final?smooth((local-11)/5):0;
+    const camera=reduceMotion?1:intro?lerp(.96,1,expand):final?lerp(1,1.015,collapse):1;
+    $('graphCamera').style.transform=`scale(${camera})`;
+    const positions=geometry.map((n,i)=>{
+      const appearance=intro&&!reduceMotion?(i===0?1:smooth((local-(i===1?2:i<5?4.2+(i-2)*.25:6.4+(i-5)*.22))/1.4)):1;
+      const y=n.y-(intro&&!reduceMotion?(1-appearance)*20:0)-(final&&i>1&&!reduceMotion?collapse*(n.y-220)*.15:0);
+      const opacity=appearance*(final&&i>1?lerp(1,.62,collapse):1);
+      const el=nodeEls[i];el.style.top=y/5.7+'%';el.style.opacity=String(opacity);el.setAttribute('aria-hidden',String(appearance<.1));
+      el.style.transform=`translate(-50%,-50%) scale(${intro&&!reduceMotion?lerp(.95,1,appearance):1})`;
+      let active=false;
+      if(down){const arrival=i===0?0:i===1?3:i<5?flowSchedule(1,i-1).end:flowSchedule(1,i-1).end;active=local>=arrival&&local<arrival+1.7;}
+      if(up)active=i===0?local>=18.4:i===1?local>=10.1&&local<18.4:i<5?local>=4+(i-2)*1.2&&local<7.7+(i-2)*1.2:false;
+      el.dataset.active=String(active);
+      if(i>=5){
+        const wi=i-5;let status='IDLE';
+        if(intro)status=local>=10?'READY':'IDLE';
+        if(down){const arrival=flowSchedule(1,wi+4).end;status=local>=arrival?'RUNNING':'QUEUED';el.style.setProperty('--work-progress',(clamp((local-arrival)/14)*100)+'%');}
+        if(up)status=local>=flowSchedule(2,wi+4).start?workerEvents[wi]:'RUNNING';
+        if(final)status='DONE';
+        workerStatus(wi,status);
+      }
+      return {x:n.x/900*width,y:y/570*height,opacity};
+    });
+    edges.forEach((edge,i)=>{
+      const a=positions[edge.aIndex],b=positions[edge.bIndex];
+      const ay=a.y+heights[edge.aIndex]/2,by=b.y-heights[edge.bIndex]/2,mid=(ay+by)/2;
+      const d=`M${a.x} ${ay} C${a.x} ${mid} ${b.x} ${mid} ${b.x} ${by}`;
+      if(d!==edge.lastD){edge.path.setAttribute('d',d);edge.lastD=d;}
+      const schedule=flowSchedule(index,i),inFlight=schedule&&local>=schedule.start&&local<schedule.end;
+      edge.path.style.opacity=String(Math.min(a.opacity,b.opacity)*(inFlight?.9:.46));
+      edge.path.style.stroke=inFlight?colors[schedule.type]:'#45616d';
+      const packet=packets[i];
+      if(!inFlight||reduceMotion){packet.g.style.opacity='0';return;}
+      const progress=clamp((local-schedule.start)/(schedule.end-schedule.start)),p=schedule.up?1-progress:progress,q=1-p;
+      const x=q*q*q*a.x+3*q*q*p*a.x+3*q*p*p*b.x+p*p*p*b.x;
+      const y=q*q*q*ay+3*q*q*p*mid+3*q*p*p*mid+p*p*p*by;
+      packet.g.setAttribute('transform',`translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+      packet.g.style.opacity=String(Math.min(smooth(progress*9),smooth((1-progress)*9)));
+      packet.circle.setAttribute('fill',colors[schedule.type]);packet.label.setAttribute('fill',colors[schedule.type]);
+      if(packet.label.textContent!==schedule.label)packet.label.textContent=schedule.label;
+    });
+    setText('cueLabel',cue.copy[0]);setText('cueTitle',cue.copy[1]);setText('cueDetail',cue.copy[2]);
+    $('graphCue').style.borderColor=up?colors.DONE:colors.TASK;
+    const toastVisible=(up&&local>=11)||(final&&local>=9)||(intro&&local>=11);$('graphToast').style.opacity=toastVisible?'1':'0';$('graphToast').setAttribute('aria-hidden',String(!toastVisible));
+    setHTML('graphToast',up?(local>=16?'ESCALATE → L0<small>1 项战略取舍<br>附聚合报告与证据引用</small>':'L1 / QUALITY GATE<small>证据审核 · 派发回归<br>等待依赖 · 决策升级</small>'):final?'HIGH-VALUE ONLY<small>风险 · 取舍 · 战略决策</small>':'LONG-LIVED IDENTITY<small>最少信息 · 最高决策价值</small>');
+    setHTML('graphHudText',intro?'模型能力 <b>↓</b> · 数量 <b>↑</b> · 生命周期 <b>↓</b> · 重建 <b>↑</b>':down?'任务包 <b>有界</b> · 权限 <b>受限</b> · 预算 <b>绑定</b>':up?`<b>${cue.received} / 9</b> 事件 → <b>${cue.reports} / 3</b> 报告 → <b>${cue.escalations} / 1</b> 升级`:'L0 <b>战略</b> · L1 <b>审核</b> · L2 / L3 <b>执行</b>');
+    if(up)eventChipEls.forEach((el,i)=>{const text=String(cue.counts[el.dataset.event]);if(eventCountEls[i].textContent!==text)eventCountEls[i].textContent=text;});
+  }
+  function machineFrame(local){
+    let index=0;for(let i=0;i<trace.length;i++)if(local>=trace[i].at)index=i;
+    const step=trace[index];
+    if(lastRecoveryIndex!==index){
+      lastRecoveryIndex=index;stateEls.forEach(el=>{el.classList.toggle('active',el.dataset.state===step.task.state);el.classList.toggle('pass',step.task.state==='DONE'&&el.dataset.state!=='FIX_REQUIRED');});
+      $('attemptLabel').textContent='ATTEMPT '+String(step.task.attempt).padStart(2,'0')+' / 03';$('generationLabel').textContent='gen.'+String(step.task.generation).padStart(2,'0');$('llmAction').textContent=step.llm;$('runtimeAction').textContent=step.runtime;$('machineLog').innerHTML='<strong>'+step.log+'</strong><br>'+step.detail;$('retryPath').setAttribute('opacity',step.task.attempt===2?'1':'.34');
+    }
+    $('failurePath').setAttribute('opacity',index===3?'1':'.35');
+    const pulse=$('machinePulse');
+    if((index===3||index===4)&&!reduceMotion){
+      const fail=index===3,p=clamp((local-(fail?7:11))/2.7);let x,y;
+      if(fail){if(p<.08){x=688;y=lerp(102,145,p/.08);}else if(p<.96){x=lerp(688,114,(p-.08)/.88);y=145;}else{x=114;y=lerp(145,167,(p-.96)/.04);}}
+      else{if(p<.12){x=114;y=lerp(167,125,p/.12);}else if(p<.88){x=lerp(114,401,(p-.12)/.76);y=125;}else{x=401;y=lerp(125,102,(p-.88)/.12);}}
+      pulse.setAttribute('cx',x);pulse.setAttribute('cy',y);pulse.setAttribute('fill',fail?colors.FAILED:colors.TASK);pulse.setAttribute('opacity',p<1?'1':'0');
+    }else pulse.setAttribute('opacity','0');
+  }
+  function memoryFrame(local){
+    const restored=local>=9;
+    $('ledgerVersion').textContent=local>=6?'v.043':'v.042';$('rebuildBadge').textContent=local<6?'WORKER gen.08 · ACTIVE':local<9?'gen.08 RELEASED · STATE RETAINED':'WORKER gen.09 · RESTORED';$('rebuildBadge').style.color=local>=6&&local<9?colors.BLOCKED:colors.DONE;$('memoryBridgeText').textContent=local<6?'CHECKPOINT → REBUILD → RESTORE':local<9?'SESSION ENDS · STATE REMAINS':'NEW SESSION · RESTORE BY REFERENCES';
+    $('deltaFill').style.transform='scaleX('+(local<9?lerp(.45,1,smooth(local/4)):lerp(.25,.8,smooth((local-9)/4)))+')';$('prefixFill').style.opacity=restored?'1':'.8';
+    const count=clamp(Math.floor((local-13)/2.2)+1,0,4);const histories=[0,20,55,105,175],bounded=[0,10,20,32,44];const full=histories[count],packet=bounded[count];setText('requestCount',count+' / 4 次请求');$('historyBar').style.transform='scaleX('+full/175+')';$('packetBar').style.transform='scaleX('+packet/44+')';$('historyValue').textContent=full+'k';$('packetValue').textContent=packet+'k';
+  }
+  function render(){
+    let index=scenes.findIndex(scene=>time<scene.end);if(index<0)index=scenes.length-1;if(index!==sceneIndex)setScene(index);
+    const scene=scenes[index],local=time-scene.start;
+    const fade=reduceMotion?1:.88+.12*smooth(local/.8);$('narrative').style.opacity=String(fade);$('narrative').style.transform=`translateY(${reduceMotion?0:(1-fade)*13}px)`;
+    const layer=index===3?$('machineLayer'):index===4?$('memoryLayer'):$('graphLayer');layer.style.opacity=String(fade);layer.style.transform=`translateX(${reduceMotion?0:(1-fade)*20}px)`;
+    if(index===3)machineFrame(local);else if(index===4)memoryFrame(local);else graphFrame(local,index);
+    let caption=scene.captions[0][1];for(const entry of scene.captions)if(local>=entry[0])caption=entry[1];if(caption!==lastCaption){$('captionText').textContent=caption;lastCaption=caption;}
+    if(Math.abs(time-lastUI)>.075||!playing){lastUI=time;$('seek').value=String(time);$('seek').style.setProperty('--seek',(time/total*100)+'%');$('seek').setAttribute('aria-valuetext',formatTime(time)+'，'+scene.name);$('currentTime').textContent=formatTime(time);chapterEls.forEach((el,i)=>{el.style.setProperty('--progress',(clamp((time-scenes[i].start)/(scenes[i].end-scenes[i].start))*100)+'%');});}
+    drawAmbient();
+  }
+  function formatTime(value){return String(Math.floor(value/60)).padStart(2,'0')+':'+String(Math.floor(value%60)).padStart(2,'0');}
+  function syncPlayback(){
+    $('playButton').setAttribute('aria-label',playing?'暂停':'播放');$('playText').textContent=playing?'暂停':'播放';$('playIcon').innerHTML=playing?'<path fill="currentColor" d="M4 3h3v10H4zM9 3h3v10H9z"/>':'<path fill="currentColor" d="m5 3 8 5-8 5z"/>';$('runLabel').textContent=playing?'RUNNING':time>=total?'COMPLETE':'PAUSED';$('signal').style.background=playing?colors.DONE:colors.BLOCKED;previousFrame=null;
+  }
+  function seekTo(value){time=clamp(value,0,total);lastUI=-1;if(time>=total)playing=false;syncPlayback();render();}
+  function togglePlay(){if(!playing&&time>=total)seekTo(0);playing=!playing;syncPlayback();render();}
+  function replay(){seekTo(0);playing=true;syncPlayback();render();}
+  function changeSpeed(){const speeds=[.5,1,1.5,2];speed=speeds[(speeds.indexOf(speed)+1)%speeds.length];$('speedButton').textContent=speed+'×';$('speedButton').setAttribute('aria-label','播放速度：'+speed+' 倍');}
+  function toggleLoop(){loop=!loop;$('loopButton').setAttribute('aria-pressed',String(loop));showToast(loop?'循环播放已开启':'循环播放已关闭');}
+  function wakeControls(){if(!$('shell').classList.contains('theater'))return;clearTimeout(controlsTimer);$('shell').classList.add('controls-awake');controlsTimer=setTimeout(()=>$('shell').classList.remove('controls-awake'),2800);}
+  function toggleTheater(){const enabled=$('shell').classList.toggle('theater');$('theaterButton').setAttribute('aria-pressed',String(enabled));if(enabled)wakeControls();else{clearTimeout(controlsTimer);$('shell').classList.remove('controls-awake');}showToast(enabled?'录屏模式：移动鼠标可显示控制；C 退出':'已退出录屏模式');}
+  async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else if($('shell').requestFullscreen)await $('shell').requestFullscreen();else showToast('此浏览器不支持全屏，可使用浏览器全屏模式。');}catch{showToast('全屏未开启，可在独立浏览器中打开此文件。');}}
+  function showToast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').classList.add('visible');toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2600);}
+  $('playButton').addEventListener('click',togglePlay);$('replayButton').addEventListener('click',replay);$('speedButton').addEventListener('click',changeSpeed);$('loopButton').addEventListener('click',toggleLoop);$('theaterButton').addEventListener('click',toggleTheater);$('fullscreenButton').addEventListener('click',fullscreen);
+
+  let scrubPlaying=false,scrubbing=false;
+  $('seek').addEventListener('pointerdown',event=>{scrubPlaying=playing;scrubbing=true;playing=false;syncPlayback();$('seek').setPointerCapture(event.pointerId);});
+  $('seek').addEventListener('input',event=>seekTo(Number(event.target.value)));
+  function finishScrub(){if(!scrubbing)return;scrubbing=false;playing=scrubPlaying&&time<total;scrubPlaying=false;syncPlayback();}
+  window.addEventListener('pointerup',finishScrub);window.addEventListener('pointercancel',finishScrub);$('seek').addEventListener('lostpointercapture',finishScrub);
+  $('shell').addEventListener('pointermove',wakeControls);$('shell').addEventListener('focusin',wakeControls);
+  document.addEventListener('keydown',event=>{
+    wakeControls();
+    if(event.ctrlKey||event.metaKey||event.altKey)return;
+    const target=event.target,onSeek=target===$('seek');
+    if(target.isContentEditable||target instanceof HTMLTextAreaElement||(target instanceof HTMLInputElement&&!onSeek))return;
+    if(onSeek&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.code))return;
+    const shortcuts=['Space','ArrowLeft','ArrowRight','Home','End','KeyR','KeyF','KeyL','KeyC'];
+    if(shortcuts.includes(event.code))event.preventDefault();
+    if(event.repeat&&!['ArrowLeft','ArrowRight'].includes(event.code))return;
+    if(event.code==='Space')togglePlay();if(event.code==='ArrowLeft')seekTo(time-5);if(event.code==='ArrowRight')seekTo(time+5);if(event.code==='Home')seekTo(0);if(event.code==='End')seekTo(total);if(event.code==='KeyR')replay();if(event.code==='KeyF')fullscreen();if(event.code==='KeyL')toggleLoop();if(event.code==='KeyC')toggleTheater();
+  });
+  document.addEventListener('visibilitychange',()=>{previousFrame=null;});document.addEventListener('fullscreenchange',()=>{resizeAmbient();$('fullscreenButton').setAttribute('aria-label',document.fullscreenElement?'退出全屏':'全屏');});
+
+  const canvas=$('ambient'),ctx=canvas.getContext('2d');let cw=0,ch=0,dpr=1;
+  const stars=Array.from({length:35},(_,i)=>({x:((i*73.37)%100)/100,y:((i*37.91)%100)/100,phase:i*1.73}));
+  function resizeAmbient(){const r=$('stage').getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);cw=r.width;ch=r.height;canvas.width=Math.round(cw*dpr);canvas.height=Math.round(ch*dpr);if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawAmbient(){if(!ctx)return;ctx.clearRect(0,0,cw,ch);for(const star of stars){const flicker=reduceMotion?.12:.1+.1*(1+Math.sin(time*.35+star.phase));ctx.fillStyle='rgba(159,209,195,'+flicker+')';ctx.beginPath();ctx.arc(star.x*cw,star.y*ch,1,0,Math.PI*2);ctx.fill();}if(reduceMotion)return;const x=cw*(.5+.3*Math.sin(time*.035));ctx.fillStyle='rgba(103,212,230,0.025)';ctx.fillRect(x,0,1,ch);}
+  const layoutObserver=new ResizeObserver(()=>{graphLayout=null;resizeAmbient();render();});layoutObserver.observe($('stage'));layoutObserver.observe($('graphCamera'));window.addEventListener('resize',()=>{graphLayout=null;resizeAmbient();});
+  let lastRenderedTime=-1;
+  function frame(now){if(previousFrame!==null&&playing&&!document.hidden){time+=(now-previousFrame)/1000*speed;if(time>=total){if(loop){time%=total;sceneIndex=-1;}else{time=total;playing=false;syncPlayback();}}}previousFrame=now;if(time!==lastRenderedTime){render();lastRenderedTime=time;}requestAnimationFrame(frame);}
+  // A small public read-only description helps reuse this standalone demo.
+  window.AgentOSFilm=Object.freeze({duration:total,chapters:scenes.map(({start,end,name})=>({start,end,name})),runtime:()=>({state:trace[lastRecoveryIndex]?.task.state||null})});
+  $('seek').max=String(total);$('durationTime').textContent=formatTime(total);resizeAmbient();syncPlayback();render();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
